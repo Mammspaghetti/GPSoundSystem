@@ -1,29 +1,34 @@
 package Main;
 
-import java.io.File;
-
 import javax.sound.sampled.Clip;
 
-class Song {
-    private String name;
-    private long duree; // en secondes
+public class Song {
 
-    public Song(File file, Clip clip) {
+    private String path;
+    private Clip clip;
 
-        this.name = file.getName();
-        this.duree = clip.getMicrosecondLength() / 1_000_000;
-
-        System.out.println("Nom : " + name);
-        System.out.println("Durée : " + getFormattedDuration());
-    }
-
-    public String getFormattedDuration() {
-        long minutes = duree / 60;
-        long seconds = duree % 60;
-        return String.format("%02d:%02d", minutes, seconds);
+    public Song(String path, Clip clip) {
+        this.path = path;
+        this.clip = clip;
     }
 
     public String getName() {
-        return name;
+        return path.substring(path.lastIndexOf("/") + 1);
+    }
+
+    public String getFormattedDuration() {
+        if (clip == null) return "00:00";
+
+        long microseconds = clip.getMicrosecondLength();
+        long seconds = microseconds / 1_000_000;
+
+        long minutes = seconds / 60;
+        long remainingSeconds = seconds % 60;
+
+        return String.format("%02d:%02d", minutes, remainingSeconds);
+    }
+
+    public Clip getClip() {
+        return clip;
     }
 }

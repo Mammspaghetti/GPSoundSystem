@@ -1,45 +1,31 @@
 package Main;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.InputStream;
+import java.io.BufferedInputStream;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
 
 public class MediaPlayer {
-    private List<File> musiques = new ArrayList<>();
+    private List<String> musiques = new ArrayList<>();
     private int currentIndex = 0;
     private Clip clip;
 
     public MediaPlayer() {
-        loadMusics();
+    	System.out.println(getClass().getResource("/assets/memphis-trap-memphis-trap-wav-349366.wav"));
+    	musiques.add("/assets/AMBForst_Foret (ID 0100)_LaSonotheque.fr.wav");
+    	musiques.add("/assets/audioclubz-audio-club-amapiano-319840.wav");
+    	musiques.add("/assets/memphis-trap-memphis-trap-wav-349366.wav");
+    	musiques.add("/assets/ASIAN-KUNG-FU-GENERATION-Rewrite.wav");
+    	musiques.add("/assets/Gorillaz-Feel-Good-Inc.-_Official-Video_.wav");
+
     }
   
-    private void loadMusics() {
-
-        File folder = new File("assets");
-
-        if (folder.exists() && folder.isDirectory()) {
-
-        	File[] files = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".wav"));
-
-            if (files != null) {
-                for (File file : files) {
-                    musiques.add(file);
-                    System.out.println("Musique chargée : " + file.getName());
-                }
-            }
-        } else {
-            System.out.println("Dossier introuvable !");
-        }
-    }
     	
-    public List<File> getMusiques() {
+    public List<String> getMusiques() {
         return musiques;
     }
     
@@ -47,21 +33,30 @@ public class MediaPlayer {
         if (musiques.isEmpty()) return;
 
         try {
-            stopMusic(); // stop si déjà en cours
-            File currentFile = musiques.get(currentIndex);
+            stopMusic();
 
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(musiques.get(currentIndex));
+            String path = musiques.get(currentIndex);
+
+            InputStream is = getClass().getResourceAsStream(path);
+
+            if (is == null) {
+                System.out.println("Fichier introuvable : " + path);
+                return;
+            }
+
+            BufferedInputStream bis = new BufferedInputStream(is);
+
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(bis);
+
             clip = AudioSystem.getClip();
             clip.open(audioStream);
-            
-            Song song = new Song(currentFile, clip);
-            
-            clip.loop(Clip.LOOP_CONTINUOUSLY); // boucle infinie
+
+            clip.loop(Clip.LOOP_CONTINUOUSLY);
             clip.start();
 
-            System.out.println("Lecture : " + musiques.get(currentIndex).getName());
+            System.out.println("Lecture : " + path);
 
-        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -83,16 +78,37 @@ public class MediaPlayer {
     public void previousMusic() {
         stopMusic();
         if(currentIndex > 0) {
-            currentIndex = (currentIndex - 1) % musiques.size();        	
+        	currentIndex = (currentIndex - 1 + musiques.size()) % musiques.size();
         }
-
         readMusic();
     }
     
     public Song getCurrentSong() {
         if (musiques.isEmpty()) return null;
 
-        File currentFile = musiques.get(currentIndex);
-        return new Song(currentFile, clip);
+        String path = musiques.get(currentIndex);
+        return new Song(path, clip);
+    }
+    
+ // Ajoute cette méthode dans MediaPlayer
+    public void playEffect(String path) {
+        try {
+            InputStream is = getClass().getResourceAsStream(path);
+            if (is == null) {
+                System.out.println("Fichier introuvable : " + path);
+                return;
+            }
+
+            // BufferedInputStream pour éviter l'erreur Stream closed
+            BufferedInputStream bis = new BufferedInputStream(is);
+
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(bis);
+            Clip effectClip = AudioSystem.getClip();
+            effectClip.open(audioStream);
+            effectClip.start(); // joue le son une seule fois
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
